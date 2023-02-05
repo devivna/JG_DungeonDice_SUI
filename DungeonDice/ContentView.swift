@@ -25,7 +25,6 @@ struct ContentView: View {
             return "You rolled a \(roll()) on a \(rawValue)-sided dice"
         }
     }
-    
     @State private var mainTitle = "Dungeon Dice"
     @State private var resultMessage = ""
     
@@ -39,30 +38,15 @@ struct ContentView: View {
         
         GeometryReader { geo in
             VStack {
-                Text(mainTitle)
-                    .font(.largeTitle)
-                    .fontWeight(.black)
+                titleView
                 
                 Spacer()
                 
-                Text(resultMessage)
-                    .font(.title)
+                resultMessageView
                 
                 Spacer()
                 
-                LazyVGrid(columns: [
-                    GridItem(.adaptive(minimum: buttonWidth), spacing: spacing)
-                ], alignment: .center) {
-                    ForEach(Dice.allCases.dropLast(buttonsLeftOver), id: \.self) { number in
-                        Button {
-                            resultMessage = number.message()
-                        } label: {
-                            Text("\(number.rawValue)-sided")
-                        }
-                        .frame(width: buttonWidth)
-                        .buttonStyle(.borderedProminent)
-                    }
-                }
+                buttonsTableView
                 
                 HStack(alignment: .center, spacing: spacing) {
                     ForEach(Dice.allCases.suffix(buttonsLeftOver), id: \.self) { number in
@@ -78,18 +62,18 @@ struct ContentView: View {
             }
             .padding()
             .onAppear {
-                arangeGridItems(geo: geo)
+                arangeGridItems(deviceWidth: geo.size.width)
                 print("A")
             }
             .onChange(of: geo.size.width, perform: { _ in
-                arangeGridItems(geo: geo)
+                arangeGridItems(deviceWidth: geo.size.width)
                 print("C")
             })
         }
     }
     
-    func arangeGridItems(geo: GeometryProxy) {
-        var screenWidth = geo.size.width - (horizontalPadding * 2)
+    func arangeGridItems(deviceWidth: CGFloat) {
+        var screenWidth = deviceWidth - (horizontalPadding * 2)
         
         if Dice.allCases.count > 1 {
             screenWidth += spacing
@@ -101,6 +85,38 @@ struct ContentView: View {
         print(buttonsLeftOver)
     }
     
+}
+
+extension ContentView {
+   private var titleView: some View {
+        Text(mainTitle)
+            .font(Font.custom("Snell Roundhand", size: 50))
+            .fontWeight(.heavy)
+            .foregroundColor(.cyan)
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
+    }
+    
+    private var resultMessageView: some View {
+        Text(resultMessage)
+            .font(.title)
+    }
+    
+    private var buttonsTableView: some View {
+        LazyVGrid(columns: [
+            GridItem(.adaptive(minimum: buttonWidth), spacing: spacing)
+        ], alignment: .center) {
+            ForEach(Dice.allCases.dropLast(buttonsLeftOver), id: \.self) { number in
+                Button {
+                    resultMessage = number.message()
+                } label: {
+                    Text("\(number.rawValue)-sided")
+                }
+                .frame(width: buttonWidth)
+                .buttonStyle(.borderedProminent)
+            }
+        }
+    }
 }
 
 struct ContentView_Previews: PreviewProvider {
