@@ -9,6 +9,45 @@ import SwiftUI
 
 struct ContentView: View {
     
+    
+    @State private var mainTitle = "Dungeon Dice"
+    @State private var resultMessage = ""
+        
+    var body: some View {
+        
+            VStack {
+                titleView
+                
+                Spacer()
+                
+                resultMessageView
+                
+                Spacer()
+                
+                ButtonLayout(resultMessage: $resultMessage)
+            }
+            .padding()
+    }
+}
+
+extension ContentView {
+    private var titleView: some View {
+        Text(mainTitle)
+            .font(Font.custom("Snell Roundhand", size: 50))
+            .fontWeight(.heavy)
+            .foregroundColor(.cyan)
+            .lineLimit(1)
+            .minimumScaleFactor(0.5)
+    }
+    
+    private var resultMessageView: some View {
+        Text(resultMessage)
+            .font(.title)
+    }
+}
+
+struct ButtonLayout: View {
+    
     enum Dice: Int, CaseIterable {
         case four = 4
         case six = 6
@@ -25,29 +64,31 @@ struct ContentView: View {
             return "You rolled a \(roll()) on a \(rawValue)-sided dice"
         }
     }
-    @State private var mainTitle = "Dungeon Dice"
-    @State private var resultMessage = ""
     
     @State private var buttonsLeftOver = 0
     
     let horizontalPadding: CGFloat = 16
     let spacing: CGFloat = 10
     let buttonWidth: CGFloat = 150
-            
+
+    @Binding var resultMessage: String
+    
     var body: some View {
-        
         GeometryReader { geo in
             VStack {
-                titleView
-                
-                Spacer()
-                
-                resultMessageView
-                
-                Spacer()
-                
-                buttonsTableView
-                
+                LazyVGrid(columns: [
+                    GridItem(.adaptive(minimum: buttonWidth), spacing: spacing)
+                ], alignment: .center) {
+                    ForEach(Dice.allCases.dropLast(buttonsLeftOver), id: \.self) { number in
+                        Button {
+                            resultMessage = number.message()
+                        } label: {
+                            Text("\(number.rawValue)-sided")
+                        }
+                        .frame(width: buttonWidth)
+                        .buttonStyle(.bordered)
+                    }
+                }
                 HStack(alignment: .center, spacing: spacing) {
                     ForEach(Dice.allCases.suffix(buttonsLeftOver), id: \.self) { number in
                         Button {
@@ -56,18 +97,15 @@ struct ContentView: View {
                             Text("\(number.rawValue)-sided")
                         }
                         .frame(width: buttonWidth)
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(.bordered)
                     }
                 }
             }
-            .padding()
             .onAppear {
                 arangeGridItems(deviceWidth: geo.size.width)
-                print("A")
             }
             .onChange(of: geo.size.width, perform: { _ in
                 arangeGridItems(deviceWidth: geo.size.width)
-                print("C")
             })
         }
     }
@@ -84,39 +122,7 @@ struct ContentView: View {
         print(numberOfButtonPerRow)
         print(buttonsLeftOver)
     }
-    
-}
 
-extension ContentView {
-   private var titleView: some View {
-        Text(mainTitle)
-            .font(Font.custom("Snell Roundhand", size: 50))
-            .fontWeight(.heavy)
-            .foregroundColor(.cyan)
-            .lineLimit(1)
-            .minimumScaleFactor(0.5)
-    }
-    
-    private var resultMessageView: some View {
-        Text(resultMessage)
-            .font(.title)
-    }
-    
-    private var buttonsTableView: some View {
-        LazyVGrid(columns: [
-            GridItem(.adaptive(minimum: buttonWidth), spacing: spacing)
-        ], alignment: .center) {
-            ForEach(Dice.allCases.dropLast(buttonsLeftOver), id: \.self) { number in
-                Button {
-                    resultMessage = number.message()
-                } label: {
-                    Text("\(number.rawValue)-sided")
-                }
-                .frame(width: buttonWidth)
-                .buttonStyle(.borderedProminent)
-            }
-        }
-    }
 }
 
 struct ContentView_Previews: PreviewProvider {
